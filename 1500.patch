@@ -1,0 +1,125 @@
+From b341ce34394abfa3e1c15060242d3e5ee587058b Mon Sep 17 00:00:00 2001
+From: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
+Date: Sun, 18 Jan 2026 15:56:56 +0900
+Subject: [PATCH 1/2] Compatible with Rust 2024 Edition
+
+cargo fix --edition
+---
+ Cargo.toml    | 2 +-
+ src/config.rs | 6 ++++--
+ src/devel.rs  | 6 +++---
+ 3 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index c3ebee92..17ebc3be 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -2,7 +2,7 @@
+ name = "paru"
+ version = "2.1.0"
+ authors = ["morganamilo <morganamilo@archlinux.org>"]
+-edition = "2021"
++edition = "2024"
+ 
+ description = "Feature packed AUR helper"
+ homepage = "https://github.com/Morganamilo/paru"
+diff --git a/src/config.rs b/src/config.rs
+index 0ecfcccf..18760ca6 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -836,7 +836,8 @@ then initialise it with:
+         }
+ 
+         if self.chroot {
+-            remove_var("PKGEXT");
++            // TODO: Audit that the environment access only happens in single-threaded code.
++            unsafe { remove_var("PKGEXT") };
+         }
+ 
+         Ok(())
+@@ -995,7 +996,8 @@ then initialise it with:
+         );
+ 
+         self.env.push((key.to_owned(), value.to_string()));
+-        set_var(key, value);
++        // TODO: Audit that the environment access only happens in single-threaded code.
++        unsafe { set_var(key, value) };
+         Ok(())
+     }
+ 
+diff --git a/src/devel.rs b/src/devel.rs
+index fb38fbe4..56c005ae 100644
+--- a/src/devel.rs
++++ b/src/devel.rs
+@@ -296,15 +296,15 @@ async fn ls_remote(
+     let future = ls_remote_internal(git, flags, remote, branch);
+     let future = timeout(time, future);
+ 
+-    if let Ok(v) = future.await {
++    match future.await { Ok(v) => {
+         v
+-    } else {
++    } _ => {
+         print_error(
+             style,
+             anyhow!("timed out looking for devel update: {}", remote),
+         );
+         bail!("")
+-    }
++    }}
+ }
+ 
+ fn parse_url(source: &str) -> Option<(String, &'_ str, Option<&'_ str>)> {
+
+From 165beecb973ae93e22284d1d4cc9759562362ea9 Mon Sep 17 00:00:00 2001
+From: Masato TOYOSHIMA <phoepsilonix@phoepsilonix.love>
+Date: Sun, 18 Jan 2026 16:01:25 +0900
+Subject: [PATCH 2/2] raur and reqwest update
+
+1. Update raur v8.0.0
+  Specifying native-tls enables the native-tls feature for reqwest, typically activating OpenSSL.
+  Specifying rusttls-tls enables the default feature for reqwest.(Depends on aws-lc-rs)
+  Specifying rusttls-ring enables the rustls-no-provider and ring features for reqwest.
+
+  The default has been set to native-tls.
+
+  https://gitlab.com/davidbittner/raur/-/merge_requests/30
+
+2. Updated to reqwest 0.13.1
+  Using native-tls to eliminate dependencies on aws-lc-rs and
+aws-lc-sys.
+
+ref
+  PR #1500
+  Morganamilo/aur-depends#24
+---
+ Cargo.toml | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 17ebc3be..b7be91ea 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -21,7 +21,7 @@ aur-depends = "5.0.0"
+ aur-fetch = "0.11.3"
+ cini = "1.0.0"
+ pacmanconf = "3.1.0"
+-raur = "7.0.0"
++raur = { version = "8.0.0" , default-features = false, features = ["reqwest", "async", "native-tls"] }
+ srcinfo = "2.1.0"
+ 
+ 
+@@ -35,7 +35,7 @@ htmlescape = "0.3.1"
+ indicatif = "0.18.3"
+ scraper = "0.25.0"
+ nix = { version = "0.30.1", features = ["fs", "user"] }
+-reqwest = { version = "0.11.27", features = ["gzip", "socks"] }
++reqwest = { version = "0.13.1", default-features = false, features = ["rustls-no-provider", "form", "gzip", "socks", "charset", "http2", "system-proxy"] }
+ rss = { version = "2.0.12", default-features = false }
+ serde = { version = "1.0.228", features = ["derive"] }
+ serde_json = "1.0.149"
+@@ -78,3 +78,4 @@ mock_chroot = ["mock"]
+ #aur-depends = { path = "../aur-depends" }
+ #srcinfo = { path = "../srcinfo.rs" }
+ #aur-fetch = { path = "../aur-fetch" }
++#raur = { path = "../raur" }

@@ -2,30 +2,33 @@
 # Maintainer: Masato TOYOSHIMA <phoepsilonix@gmail.com>
 # Contributor: Morgan <morganamilo@archlinux.org>
 
-_ver_pacman_static=7.1.0.r9.g54d9411-2
-_unistring_ver=1.4.1
+_ver_pacman_static=7.1.0.r9.g54d9411-15
+_unistring_ver=1.4.2
+# 'attr' and 'acl' are held back because both use the Linux 6.13 'struct xattr_args' UAPI
+# for the 'setxattrat' and 'getxattrat' syscalls in their shared libmisc/xattrat.c. The
+# 'kernel-headers-musl' package is still on 6.12, so attr 2.6.0 and acl 2.4.0 both fail to
+# compile with "storage size of 'uargs' isn't known".
 _attr_ver=2.5.2
 _acl_ver=2.3.2
 _lz4_ver=1.10.0
-_libxml2_ver=2.15.1
+_libxml2_ver=2.15.3
 _libidn2_ver=2.3.8
 _brotli_ver=1.2.0
 _libssh2_ver=1.11.1
-_e2fsprogs_ver=1.47.3
-_nghttp3_ver=1.13.1
-_libpsl_ver=0.21.5
-_curl_ver=8.17.0
+_e2fsprogs_ver=1.47.4
+_nghttp3_ver=1.18.0
+_libpsl_ver=0.23.1
+_curl_ver=8.21.0
 #_krb5_ver=1.21.3
 #_readline_ver=8.2
 #_libedit_ver=20250104-3.1
-_ssl_ver=3.6.1
 
 _commit=9ac3578807a87858651e81a02586ceb947686e7c
 
 pkgname=paru-static
 _pkgname=paru
 pkgver=2.2.0
-pkgrel=7
+pkgrel=8
 pkgdesc='Feature packed AUR helper'
 url='https://github.com/Morganamilo/paru'
 source=(git+https://github.com/Morganamilo/paru.git?commit=$_commit
@@ -36,7 +39,10 @@ source=(git+https://github.com/Morganamilo/paru.git?commit=$_commit
         https://ftp.gnu.org/gnu/libunistring/libunistring-${_unistring_ver}.tar.gz
         https://download-mirror.savannah.gnu.org/releases/acl/acl-${_acl_ver}.tar.gz
         https://download.savannah.gnu.org/releases/attr/attr-${_attr_ver}.tar.gz
-        attr.patch::https://cgit.git.savannah.gnu.org/cgit/attr.git/patch/?id=8a80d895dfd779373363c3a4b62ecce5a549efb2
+	# The remote hash was not reproducible due to Savannah including its version on the patch page.
+	# Prefer a local file instead.
+	#attr.patch::https://cgit.git.savannah.gnu.org/cgit/attr.git/patch/?id=8a80d895dfd779373363c3a4b62ecce5a549efb2
+        attr.patch
         lz4-${_lz4_ver}.tar.gz::https://github.com/lz4/lz4/archive/refs/tags/v${_lz4_ver}.tar.gz
         https://gitlab.gnome.org/GNOME/libxml2/-/archive/v${_libxml2_ver}/libxml2-v${_libxml2_ver}.tar.gz
         https://ftp.gnu.org/gnu/libidn/libidn2-${_libidn2_ver}.tar.gz
@@ -49,7 +55,10 @@ source=(git+https://github.com/Morganamilo/paru.git?commit=$_commit
         #https://thrysoee.dk/editline/libedit-${_libedit_ver}.tar.gz
         #https://web.mit.edu/kerberos/dist/krb5/${_krb5_ver%\.[0-9]*}/krb5-${_krb5_ver}.tar.gz
         #krb5.patch
-		https://github.com/Morganamilo/paru/pull/1500.patch
+        # Kept as a local file instead of being downloaded from the pull request. GitHub
+        # regenerates that patch whenever the branch is pushed to, which changes its
+        # checksum and breaks the build.
+        1500.patch
         rust_2024_edition.patch
 )
 arch=('i686' 'pentium4' 'x86_64' 'arm' 'armv7h' 'armv6h' 'aarch64' 'riscv64')
@@ -61,19 +70,19 @@ depends=()
 optdepends=('bat: colored pkgbuild printing' 'devtools: build in chroot and downloading pkgbuilds')
 sha256sums=('SKIP'
             'SKIP'
-            'e8e74cdeefe5fb78b3ae6e90cd542babf788fa9480029cfcee6fd9ced42b7910'
-            '12542ad7619470efd95a623174dcd4b364f2483caf708c6bee837cb53a54cb9d'
+            'd9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb'
+            'e82664b170064e62331962126b259d452d53b227bb4a93ab20040d846fec01d8'
             '5f2bdbad629707aa7d85c623f994aa8a1d2dec55a73de5205bac0bf6058a2f7c'
             '39bf67452fa41d0948c2197601053f48b3d78a029389734332a6309a680c6c87'
-            '51365cfb4f0d0bd972b99495b99e379984264495018e00f96290684a9e0fcfd3'
+            '1a863fca149154255f7b2d76e9ea1f0eb7b7f932ded5827384510fcae08a8536'
             '537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b'
-            '0a5ebf8fa131585748d661ae692503483aff39d9b29b6c4b342cd80d422f246c'
+            '0da50c1415f4ec0364569d2119b1436ba837b31df44af28569d234272c23cf1f'
             'f557911bf6171621e1f72ff35f5b1825bb35b52ed45325dcdee931e5d3c0787a'
             '816c96e8e8f193b40151dad7e8ff37b1221d019dbcb9c35cd3fadbfe6477dfec'
             'd9ec76cbe34db98eec3539fe2c899d26b0c837cb3eb466a56b0f109cabf658f7'
-            '9286ee5471a8a5339a61eb952739e4614a5b1dbed79ca73a78f014885ce2ad53'
-            '07160f28af3ddc3e8b95c8bbefe08c650e7cf303375141b6ca35cc89b319f70d'
-            'd6717685a5f221403041907cca98ae9f72aef163b9d813d40d417c2663373a32'
+            '9f82eaa7002673291629077b80ee005cadfcd49854907a22007fed70b0ef596e'
+            '2812e9c06583fa24c8dc46bdb5291310a69196352ceaca8fbe98106ff36ae7d8'
+            'b7f983566a9b268b06796068c3147ff2fed3f71c106a5fe0b314e060ce9b9c70'
             '61936da5e20bdae2578c739c53d836cfd733cac1879ce1fa1feaba01fcf75a9d'
             'ed3a5cdc846a069ac703dfa33c03345080530cc8632e8d3f583a533a3f1e468f')
 #options=('lto')
@@ -162,6 +171,8 @@ prepare() {
 
   #depends library
   #attr patch
+  # Adds the missing <libgen.h> include for basename(3), which musl needs. This is upstream
+  # in attr 2.6.0, so it can be dropped once _attr_ver moves to 2.6.0 or newer.
   cd ${srcdir}/attr-${_attr_ver}
   patch -p1 -i ${srcdir}/attr.patch
   cd ../..
@@ -254,10 +265,10 @@ build () {
     # Addition of -ffat-lto-objects to LTOFLAGS.(prevent static lib mangling)
     sed -r "/(export LDFLAGS=.*)/s/(.+)/export LTOFLAGS+=' -fuse-linker-plugin -ffat-lto-objects'\n\1/" PKGBUILD -i
     echo "Building pacman-static"
-    # _sslver=3.6.1 above
-    # pacman-static 7.1.0.r9 : _sslver=3.6.0
-    sed -e "s/^_sslver=.*$/_sslver=${_ssl_ver}/" PKGBUILD -i
-    sed -e "s/866825a1cdf0b705b409402fbc7a713e7d9b8e7736c5126be57b354927954c148a341fc52b02c0629c1e015a889bfd40217f8e703b73235892e91da060909b76/492cd2e0a7506e085d9840a929ead994390409a35c24e47e0cf44987920711b61f1513f21b7eee50e56f226b26cd654cda6dbd1f6e439563a93a8f0e530fefb5/" PKGBUILD -i
+    # The OpenSSL version used to be forced to a newer release than 'pacman-static' shipped
+    # with. That is no longer done because 'pacman-static' now tracks a newer OpenSSL than
+    # the override did. Overriding only the version left the recorded checksum pointing at
+    # a different release, which failed the validity check.
     #for i in $( . PKGBUILD; echo "${validpgpkeys[@]}" ); do gpg --receive "$i"; gpg -a --export "$i" > "keys/pgp/$i.asc" ; done
     makepkg -si --noconfirm --skippgpcheck
   else
@@ -313,7 +324,7 @@ build () {
   if [ -f $TMPDIR/usr/lib/libcurl.a ];then
 	  echo "skip curl"
   else
-    # c-ares is not detected via pkg-config :(
+    LIBS="$(pkg-config --static --libs-only-l openssl)" \
     ./configure --prefix="$TMPDIR"/usr \
                 --disable-shared \
                 --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
@@ -321,7 +332,6 @@ build () {
                 --without-{brotli,gssapi,libidn2,librtmp,libssh2,libpsl} \
                 --disable-libcurl-option \
                 --with-openssl \
-                --enable-ares=/usr/lib/pacman/ \
                 --disable-kerberos-auth
     make -C lib
     make install-pkgconfigDATA
@@ -333,13 +343,13 @@ build () {
   build_lib "libunistring" "libunistring-${_unistring_ver}"
 
   # attr
-  build_lib "attr" "attr-${_attr_ver}"  # 最新確認: 2.5.2 or update
-  
+  build_lib "attr" "attr-${_attr_ver}"  # 最新確認: 2.6.0 or update
+
   # acl
-  build_lib "acl" "acl-${_acl_ver}"  # 最新確認: 2.3.2 or update
+  build_lib "acl" "acl-${_acl_ver}"  # 最新確認: 2.4.0 or update
 
   # lz4
-  build_lib "lz4" "lz4-1.10.0" "BUILD_STATIC=yes BUILD_SHARED=no"  # make
+  build_lib "lz4" "lz4-${_lz4_ver}" "BUILD_STATIC=yes BUILD_SHARED=no"  # make
 
   # libxml2
   build_lib "libxml2" "libxml2-v${_libxml2_ver}" "--without-python"  # without python
@@ -354,8 +364,8 @@ build () {
   build_lib "e2fsprogs" "e2fsprogs-${_e2fsprogs_ver}" "--enable-elf-shlibs=no --disable-fuse2fs"  # static #no needed fuse3 for paru
 
   # libssh2
-  #build_lib "libssh2" "libssh2-${_libssh2_ver}" "-DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=OFF"  # cmake
-  build_lib "libssh2" "libssh2-${_libssh2_ver}" "--with-crypto=openssl" #configure
+  ## Disable examples to avoid unnecessary dependencies.
+  build_lib "libssh2" "libssh2-${_libssh2_ver}" "--with-crypto=openssl --disable-examples-build" #configure
   
   # nghttp3
   #build_lib "nghttp3" "nghttp3-${_nghttp3_ver}" "-DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=ON -DENABLE_SHARED_LIB=OFF" #cmake
@@ -398,6 +408,11 @@ build () {
   # If LD is set to mold, gold, or ld, an error will occur.
   # It is best to use gcc (cc) or no linker specification.
   RUSTFLAGS+=" -Clinker=gcc -Clink-arg=-fuse-ld=lld -Clink-arg=--verbose"
+
+  # Workaround using the correct musl path for math functions.
+  if [[ $TARGET =~ musl ]]; then
+    RUSTFLAGS+=" -Clink-arg=-L/usr/lib/musl/lib"
+  fi
   if [[ $CARCH == x86_64 ]]; then
     #PIE
     export RUSTFLAGS+=" -C link-self-contained=on -C strip=symbols -C no-redzone=y -C overflow-checks=y -C opt-level=z -C control-flow-guard=y -C link-arg=-Wp,-D_FORTIFY_SOURCE=2 -C link-arg=-U_FORTIFY_SOURCE -C link-arg=-D_FORTIFY_SOURCE=2 -C link-arg=-fPIE -C link-arg=-fpie -C link-arg=-Wl,-z,relro,-z,now"
